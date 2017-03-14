@@ -1,0 +1,11 @@
+#!/bin/sh
+
+. /etc/init.d/functions-ri
+
+for service in $(ls -A ../1-*|grep -v rclocal); do
+	serviceran $service || serviceup $service || exit 1
+done
+
+timeout -t 300 sh /etc/rc.local 2>&1
+
+markran

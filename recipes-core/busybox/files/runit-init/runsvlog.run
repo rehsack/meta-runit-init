@@ -1,0 +1,7 @@
+#!/bin/sh
+
+. /etc/init.d/functions-ri
+
+serviceup ../../syslog || exit 1
+
+exec logger -s -t "$(basename "$(dirname "$(pwd)")")"

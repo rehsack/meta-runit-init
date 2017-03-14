@@ -1,0 +1,23 @@
+# This configuration file lists filesystem objects that should get verified
+# during rootfs creation
+#
+# Every line must either be a comment starting with #
+# or a definition of format:
+# <type> <owner> <group> <mode> <path> <linksource>
+# where the items are separated by whitespace !
+#
+# <type> : d|f|l : (d)irectory|(f)ile|(l)ink
+#
+# A linking example:
+# l root root 0777 /var/test /tmp/testfile
+# f root root 0644 /var/test none
+#
+d root root 0755 /etc/service none
+l root root 0755 /etc/service /var/persistent/etc/service
+f root root 0755 /etc/timestamp none
+l root root 0644 /etc/timestamp /var/persistent/etc/timestamp
+d root root 0644 /var/lib/urandom none
+f root root 0644 /var/lib/urandom/random-seed none
+l root root 0644 /var/lib/urandom/random-seed /var/persistent/var/lib/urandom/random-seed
+d root root 0755 /etc/cron/crontabs none
+l root root 0755 /etc/cron/crontabs /var/persistent/etc/cron/crontabs

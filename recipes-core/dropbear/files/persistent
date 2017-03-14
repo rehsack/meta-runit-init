@@ -1,0 +1,4 @@
+d root root 0700 /var/lib/dropbear none
+l root root 0700 /var/lib/dropbear /var/persistent/var/lib/dropbear
+d root root 0700 /etc/dropbear none
+l root root 0700 /etc/dropbear /var/persistent/etc/dropbear

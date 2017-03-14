@@ -1,0 +1,21 @@
+#!/bin/sh
+
+. /etc/init.d/functions-ri
+. /etc/default/rcS
+
+serviceran ../1-hostname || exit 1
+
+#
+# Update /etc/motd.
+#
+
+if test "$EDITMOTD" = "yes"; then
+	uname -a > /run/motd.tmp
+	sed 1d /etc/motd >> /run/motd.tmp
+	cat /run/motd.tmp >/etc/motd || exit 1
+	rm -f /run/motd.tmp
+fi
+
+markran
+
+exit 0

@@ -1,0 +1,65 @@
+#!/bin/sh
+
+if [ ! -e /proc/cmdline ]; then
+	NOINIT=noinit
+	. /sbin/earlyinit
+fi
+
+# Init already switch to multiuser mode
+if [ -n "$(ps|grep 'runsvdir'|grep -v grep)" ]; then
+	exec telinit "$@"
+fi
+
+. /etc/default/rcS
+. /etc/init.d/functions-ri
+
+if ( ( [ "$SULOGIN" = "yes" ] || grep -q 'sulogin' /proc/cmdline ) && ! grep -q 'sulogin=false' /proc/cmdline ) && [ -x "$(which sulogin.sh)" ]; then
+	[ -x "$(which cttyhack)" ] && usecttyhack=cttyhack
+	$usecttyhack sulogin.sh -t ${SULOGIN_TIMEOUT:-30} $CONSOLE
+fi
+
+if is_read_only_directory /var/service; then
+(
+	set -e
+	if [ -e /run ] && ! grep -q ' /run ' /proc/mounts; then
+		if [ ! -L /run ]; then
+			mount -o mode=0755 -t tmpfs tmpfs /run
+		fi
+	fi
+	
+	umask 022
+	rm -rf /run/service-fallback
+	mkdir -p /run/service-fallback
+	chown root.root /run/service-fallback
+
+	if [ -d /etc/volatiles.orig/var/service ]; then
+		mkdir -p /run/service-fallback/upper
+		mkdir -p /run/service-fallback/work
+		mount -o mode=0755 -t tmpfs tmpfs /run/service-fallback 
+		mount overlay -t overlay -olowerdir=/etc/volatiles.orig/var/service,upperdir=/run/service-fallback/upper,workdir=/run/service-fallback/work /var/service
+	else
+		# Move /var/services files (if any) to writable /var/service
+		cp -a /var/service/* /run/service-fallback/
+		mount -o mode=0755 -t tmpfs tmpfs /var/service
+		cp -a /run/service-fallback/* /var/service/
+	fi
+) || {
+	echo "FATAL: Unable to mount /var/service as writable."
+	[ -x "$(which cttyhack)" ] && usecttyhack=cttyhack
+	$usecttyhack sulogin $CONSOLE	
+}
+fi
+
+if [ -z "$(ls -A /var/service)" ] || is_read_only_directory /var/service; then
+	echo "FATAL: No runnable runit startup scripts.  Dropping to single user shell."
+	[ -x "$(which cttyhack)" ] && usecttyhack=cttyhack
+	$usecttyhack sulogin $CONSOLE	
+fi
+
+# Execute runsvdir until halt or reboot
+[ "$VERBOSE" != "no" ] && {
+	echo "Peforming main startup"
+	exec runsvdir -s /sbin/initsig /var/service <&- >/dev/console 2>/dev/console
+} || {
+	exec runsvdir -s /sbin/initsig /var/service <&- >&- 2>&-
+}

@@ -1,0 +1,63 @@
+#!/bin/sh
+
+if [ "$(basename "${0}")" = "run" ]; then
+	. /etc/init.d/functions-ri
+
+	serviceran ../1-rootfs || exit 1
+fi
+
+# Mount the Linux kernel virtual filesystems
+if [ -e /proc ] && ! [ -e /proc/mounts ]; then
+        mount -n none -t proc /proc
+fi
+if [ -e /sys ] && grep -q sysfs /proc/filesystems && ! [ -e /sys/class ]; then
+        mount -n none -t sysfs /sys
+fi
+
+# Ensure devtmpfs or tmpfs on /dev is mounted, it must be done manually with initramfs
+# tmpfs is used with busybox-mdev or custom manual /dev
+if ! [ -e /dev/zero ] && [ -e /dev ]; then
+        mount -n none -t tmpfs -o size=64k,mode=0755 /dev
+fi
+
+mkdir -p /dev/shm
+chmod 777 /dev/shm
+
+TTYGRP=5
+TTYMODE=620
+
+[ -r /etc/default/devpts ] && . /etc/default/devpts
+
+if grep -q devpts /proc/filesystems; then
+	test -c /dev/ptmx || mknod -m 666 /dev/ptmx c 5 2
+	if ! grep -q devpts /proc/mounts; then
+		mkdir -p /dev/pts
+		mount -t devpts devpts /dev/pts -ogid=${TTYGRP},mode=${TTYMODE}
+	fi
+fi
+
+touch /dev/mdev.seq
+
+#sysctl -w kernel.hotplug=/sbin/mdev
+echo "/sbin/mdev" > /proc/sys/kernel/hotplug
+mdev -s
+
+for modalias in $(find /sys -name modalias -exec cat {} \; ); do
+	if modprobe -s $modalias 2>/dev/null; then
+		echo "Install module $modalias"
+	fi
+done
+
+#
+# We might have mounted something over /dev, see if /dev/initctl is there.
+#
+if test ! -p /dev/initctl; then
+        rm -f /dev/initctl
+        mknod -m 600 /dev/initctl p
+fi
+
+if [ "$(basename "${0}")" = "run" ]; then
+	markran
+fi
+
+exit 0

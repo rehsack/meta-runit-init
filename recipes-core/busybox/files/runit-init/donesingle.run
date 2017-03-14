@@ -1,0 +1,15 @@
+#!/bin/sh
+
+. /etc/init.d/functions-ri
+
+for service in $(ls -A ../1-*); do
+	case "$service" in
+	*)
+		serviceran ../"$service" || serviceup ../"$service" || exit 1
+		;;
+	esac
+done
+
+serviceup ../syslog || exit 1
+
+markran

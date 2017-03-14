@@ -1,0 +1,43 @@
+#!/bin/sh
+
+[ -z "$1" ] && exit 0
+
+. /etc/default/rcS
+
+killservices() {
+	sv down $(ls -Ad /var/service/*) 2>/dev/null
+	sv down $(ls -Ad /var/service/*) 2>/dev/null
+	for ttyn in /dev/tty[0-9][0-9]*; do
+		deallocvt ${ttyn##/dev/tty} 
+	done
+}
+
+case $1 in
+0)
+	exec setsid sh -c "kill -HUP $PPID; kill -TERM $PPDI; exec kill -USR1 1"
+	;;
+6)
+	exec setsid sh -c "kill -HUP $PPID; kill -TERM $PPID; exec kill -TERM 1"
+	;;
+q | 2 | 3 | 4 | 5 | u)
+	kill -HUP 1
+	;;
+1)
+	exec setsid sh -c "kill -HUP $PPID; kill -TERM $PPID; exec kill -USR2 1"
+	;;
+S)
+	echo "Quick (unclean) single user now..."|logger -t init -s 2>/dev/console
+	setsid sh -c 'kill -HUP '"$PPID"' kill -TERM '"$PPID"'
+	sv down $(ls -Ad /var/service/getty-*) 2>/dev/null
+	sleep 10
+	for ttyn in /dev/tty[0-9][0-9]*; do
+		deallocvt ${ttyn##/dev/tty} 2>/dev/null
+	done
+	setsid cttyhack sulogin.sh $CONSOLE
+	exec setsid sv up $(ls -Ad /var/service/getty-*) 2>/dev/null'
+	;;
+*)
+	echo "telinit: unknown command"
+	exit 1
+	;;
+esac

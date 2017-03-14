@@ -1,0 +1,68 @@
+#!/bin/sh
+
+serviceup() {
+	uptime="$2"
+	[ -z "$uptime" ] && uptime=2
+	depstatus="$(sv s "$1")"
+	if echo "$depstatus"| grep '^run:' | grep -q '[0-9][0-9]*s'; then
+		rantime="${depstatus##* }"
+		rantime="${rantime%%s}"
+		if [ "$rantime" -ge "$uptime" ]; then
+			return 0
+		fi
+	fi
+	return 1
+}
+
+servicedown() {
+	if sv s "$1" | grep -q '^down:'; then
+		return 0
+	fi
+	return 1
+}
+
+serviceran() {
+	if servicedown "$1"; then
+		if ! sv s "$1" | grep -q 'want up'; then
+			return 0
+		fi
+	fi
+	return 1
+}
+
+markran() {
+	if [ -d "$(pwd)/log" ]; then
+		sv d "$(pwd)/log"
+	fi
+	exec sv d "$(basename "$(pwd)")"
+}
+
+is_read_only_directory() {
+        local testdir="$1"
+        local rmode
+        local cdir="$(readlink -f $testdir)"
+        local odir="first"
+        while [ "$odir" != "/" ] && [ -z "$rmode" ]; do
+                if [ -L "$cdir" ]; then
+                        if [ -d "$(readlink -f "$cdir")" ]; then
+                                rmode="$(grep " $cdir " /proc/mounts | cut -f4 -d\  | sed -e 's/^\(\|,\)\(r\(o\|w\)\)\(,.*\|\)$/\2/')"
+                        else
+                                echo "ERROR: Canonicalization of $testdir ($cdir) is not a directory"
+                                return 1
+                        fi
+                elif [ ! -d "$cdir" ]; then
+                        echo "ERROR: Canonicalization of $testdir ($cdir) is not a directory"
+                        return 1
+                else
+                        rmode="$(grep " $cdir " /proc/mounts | cut -f4 -d\  | sed -e 's/^\(\|,\)\(r\(o\|w\)\)\(,.*\|\)$/\2/')"
+                fi
+                # Move up the tree
+                odir="$cdir"
+                cdir=`dirname $cdir`
+        done
+        if [ "$rmode" = "ro" ]; then
+                return 0
+        else
+                return 1
+        fi
+}

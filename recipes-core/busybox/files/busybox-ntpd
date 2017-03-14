@@ -1,0 +1,76 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:             time
+# Required-Start:       $remote_fs $networking
+# Required-Stop:        $remote_fs $networking
+# Default-Start:        S
+# Default-Stop:         0 6
+# Short-Description:    Time Synchronization
+### END INIT INFO
+
+set -e
+
+if [ -f /etc/busybox-ntpd.conf ]; then
+	. /etc/busybox-ntpd.conf
+fi
+
+NTPD_ARGS=""
+
+if [ "$NTPD_SERVE_TIME" = "true" ]; then
+	NTPD_ARGS="-l"
+fi
+
+if [ -x "$NTPD_UPDATE_SCRIPT" ]; then
+	NTPD_ARGS="$NTPD_ARGS -S $NTPD_UPDATE_SCRIPT"
+fi
+
+if [ -z "$NTP_UPSTREAM_SERVERS" ]; then
+	for i in $(seq 0 3); do
+		NTP_UPSTREAM_SERVERS="$NTP_UPSTREAM_SERVERS $i.pool.ntp.org"
+	done
+fi
+
+for server in $NTP_UPSTREAM_SERVERS; do
+	NTPD_ARGS="$NTPD_ARGS -p $server"
+done
+
+if [ "$(basename "${0}")" = "run" ]; then
+	. /etc/init.d/functions-ri
+
+	serviceran ../1-rootfs || exit 1
+	# Initial get date/time
+	/usr/sbin/ntpd -q -N -n -p $NTP_UPSTREAM_SERVERS 2>&1 && {
+		# Update stored time so next boot has better time
+		[ -x /etc/init.d/hwclock.sh ] && /etc/init.d/hwclock.sh stop
+		( [ -w /etc/timestamp ] || [ -w /etc ] ) && date -u +%4Y%2m%2d%2H%2M%2S >/etc/timestamp
+	} || {
+		sleep 60
+		exit 1
+	}
+
+	exec /usr/sbin/ntpd -n -N $NTPD_ARGS 2>&1
+fi
+
+case "$1" in
+  start)
+	echo -n "Starting ntpd: "
+	/sbin/ntpd -q -N -n -p $NTP_UPSTREAM_SERVERS
+	start-stop-daemon -S -b -n ntpd -a /sbin/ntpd -- -N -n $NTPD_ARGS
+	echo "done"
+	;;
+  stop)
+	echo -n "Stopping ntpd: "
+	start-stop-daemon -K -n ntpd
+	echo "done"
+	;;
+  restart)
+	$0 stop
+	$0 start
+	;;
+  *)
+	echo "Usage: ntpd { start | stop | restart }" >&2
+	exit 1
+	;;
+esac
+
+exit 0

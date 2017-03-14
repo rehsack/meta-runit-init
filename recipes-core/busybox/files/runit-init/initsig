@@ -1,0 +1,48 @@
+#!/bin/sh
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
+export PATH
+
+[ -z "$1" ] && exit 0
+
+killservices() {
+	sv down $(ls -Ad /var/service/*) 2>/dev/null
+	sv down $(ls -Ad /var/service/*) 2>/dev/null
+	sleep 20
+	for devttyn in /dev/tty[0-9][0-9]*; do
+		deallocvt ${ttyn##/dev/tty}
+	done
+}
+
+[ -z "$CONSOLE" ] && CONSOLE=/dev/console
+
+exec </dev/console >/dev/console 2>/dev/console
+
+case $1 in
+10 | USR1 )
+	echo "Initiating shutdown and poweroff now..." |logger -t init -s 2>&1
+	# USR1 = poweroff
+	killservices
+	/etc/init.d/system-stop.sh
+	exec poweroff -f
+	;;
+12 | USR2 )
+	echo "Going to single user now..."|logger -t init -s 2>&1
+	# USR2 = single user
+	killservices
+	usecttyhack=""
+	[ -x "$(which cttyhack)" ] && usecttyhack=cttyhack
+	setsid $usecttyhack sulogin $CONSOLE
+	exec reboot -f
+	;;
+2 | INT | 15 | TERM )
+	echo "Rebooting system now..." |logger -t init -s 2>&1
+	# INT (Ctrl-alt-del) or TERM = reboot
+	killservices
+	/etc/init.d/system-stop.sh
+	exec reboot -f
+	;;
+*)
+	exit 0	
+	;;
+esac

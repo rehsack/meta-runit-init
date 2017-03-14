@@ -1,0 +1,4 @@
+#!/bin/sh
+
+DROPBEAR_EXTRA_ARGS="-sjgk"
+DROPBEAR_KEYTYPES="rsa ecdsa"
