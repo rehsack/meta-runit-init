@@ -34,7 +34,7 @@ SRC_URI_append = " \
 
 RRECOMMENDS_${PN}-runit-init += "${PN}-mdev ${PN}-syslog"
 
-PACKAGES =+ " ${PN}-runit-init"
+BUSYBOX_EXTRA_PACKAGES2 += "${PN}-runit-init"
 
 FILES_${PN}-runit-init = "${base_sbindir}/init ${base_sbindir}/init.${PN} ${base_sbindir}/telinit ${base_sbindir}/telinit.${PN} ${base_sbindir}/initsig ${sysconfdir}/rc.local ${sysconfdir}/default ${sysconfdir}/sv ${libexecdir}/getty-tty ${sysconfdir}/default/persistent ${sysconfdir}/logrotate-dmesg.conf ${base_sbindir}/runlevel ${localstatedir}/lib/urandom ${sysconfdir}/etc/init.d/system-stop.sh ${base_sbindir}/sulogin.sh ${base_sbindir}/sushell"
 
@@ -131,4 +131,42 @@ do_install_append() {
 		# Make sure timestamp exists
 		touch ${D}${sysconfdir}/timestamp
 	fi
+}
+
+python() {
+    if d.getVar('VIRTUAL-RUNTIME_init_manager', True) == 'busybox-runit-init':
+        pn = d.getVar('PN', True)
+        d.appendVar('ALTERNATIVE_%s-cron' % (pn), ' crond-init')
+        d.setVarFlag('ALTERNATIVE_LINK_NAME', 'crond-init', '%s/init.d/crond' % (d.getVar('sysconfdir', True)))
+        d.setVarFlag('ALTERNATIVE_TARGET', 'crond-init', '%s/init.d/crond.%s' % (d.getVar('sysconfdir', True), d.getVar('BPN', True)))
+        d.appendVar('ALTERNATIVE_%s-ntpd' % (pn), ' ntpd-init')
+        d.setVarFlag('ALTERNATIVE_LINK_NAME', 'ntpd-init', '%s/init.d/ntpd' % (d.getVar('sysconfdir', True)))
+        d.setVarFlag('ALTERNATIVE_TARGET', 'ntpd-init', '%s/init.d/ntpd.%s' % (d.getVar('sysconfdir', True), d.getVar('BPN', True)))
+        d.appendVar('ALTERNATIVE_%s-ntpd' % (pn), ' ntpd-conf')
+        d.setVarFlag('ALTERNATIVE_LINK_NAME', 'ntpd-conf', '%s/ntpd.conf' % (d.getVar('sysconfdir', True)))
+        d.setVarFlag('ALTERNATIVE_TARGET', 'ntpd-conf', '%s/ntpd.conf.%s' % (d.getVar('sysconfdir', True), d.getVar('BPN', True)))
+        d.appendVar('ALTERNATIVE_%s-syslog' % (pn), ' syslog-init')
+        d.setVarFlag('ALTERNATIVE_LINK_NAME', 'syslog-init', '%s/init.d/syslog' % (d.getVar('sysconfdir', True)))
+        d.setVarFlag('ALTERNATIVE_TARGET', 'syslog-init', '%s/init.d/syslog.%s' % (d.getVar('sysconfdir', True), d.getVar('BPN', True)))
+        d.appendVar('ALTERNATIVE_%s-syslog' % (pn), ' syslog-startup-conf')
+        d.setVarFlag('ALTERNATIVE_LINK_NAME', 'syslog-startup-conf', '%s/syslog-startup.conf' % (d.getVar('sysconfdir', True)))
+        d.setVarFlag('ALTERNATIVE_TARGET', 'syslog-startup-conf', '%s/syslog-startup.conf.%s' % (d.getVar('sysconfdir', True), d.getVar('BPN', True)))
+
+    if bb.utils.contains('DISTRO_FEATURES', 'sysvinit', True, False, d):
+        pn = d.getVar('PN', True)
+        d.appendVar('ALTERNATIVE_%s-syslog' % (pn), ' syslog-init')
+        d.setVarFlag('ALTERNATIVE_LINK_NAME', 'syslog-init', '%s/init.d/syslog' % (d.getVar('sysconfdir', True)))
+        d.setVarFlag('ALTERNATIVE_TARGET', 'syslog-init', '%s/init.d/syslog.%s' % (d.getVar('sysconfdir', True), d.getVar('BPN', True)))
+        d.appendVar('ALTERNATIVE_%s-syslog' % (pn), ' syslog-startup-conf')
+        d.setVarFlag('ALTERNATIVE_LINK_NAME', 'syslog-startup-conf', '%s/syslog-startup.conf' % (d.getVar('sysconfdir', True)))
+        d.setVarFlag('ALTERNATIVE_TARGET', 'syslog-startup-conf', '%s/syslog-startup.conf.%s' % (d.getVar('sysconfdir', True), d.getVar('BPN', True)))
+        d.appendVar('ALTERNATIVE_%s-cron' % (pn), ' busybox-cron')
+        d.setVarFlag('ALTERNATIVE_LINK_NAME', 'busybox-cron', '%s/init.d/crond' % (d.getVar('sysconfdir', True)))
+        d.setVarFlag('ALTERNATIVE_TARGET', 'busybox-cron', '%s/init.d/crond.%s' % (d.getVar('sysconfdir', True), d.getVar('BPN', True)))
+        d.appendVar('ALTERNATIVE_%s-ntpd' % (pn), ' busybox-ntpd')
+        d.setVarFlag('ALTERNATIVE_LINK_NAME', 'busybox-ntpd', '%s/init.d/ntpd' % (d.getVar('sysconfdir', True)))
+        d.setVarFlag('ALTERNATIVE_TARGET', 'busybox-ntpd', '%s/init.d/ntpd.%s' % (d.getVar('sysconfdir', True), d.getVar('BPN', True)))
+        d.appendVar('ALTERNATIVE_%s-ntpd' % (pn), ' busybox-ntpd-conf')
+        d.setVarFlag('ALTERNATIVE_LINK_NAME', 'busybox-ntpd-conf', '%s/ntpd.conf' % (d.getVar('sysconfdir', True)))
+        d.setVarFlag('ALTERNATIVE_TARGET', 'busybox-ntpd-conf', '%s/ntpd.conf.%s' % (d.getVar('sysconfdir', True), d.getVar('BPN', True)))
 }
