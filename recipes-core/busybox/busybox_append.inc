@@ -28,13 +28,13 @@ SRC_URI_append = " \
 	file://runit-init/telinit \
 	file://runit-init/urandom.run \
 	${@bb.utils.contains('DISTRO_FEATURES','selinux','file://runit-init/sushell','',d)} \
-	${@['', 'file://runit.cfg'][(d.getVar('VIRTUAL-RUNTIME_runit', True) == 'busybox')]} \
-	${@['', 'file://runit.cfg'][(d.getVar('VIRTUAL-RUNTIME_init_manager', True) == 'busybox-runit-init')]} \
+	${@['','file://runit.cfg'][(d.getVar('VIRTUAL-RUNTIME_runit', True) == 'busybox')]} \
+	${@['','file://runit.cfg'][(d.getVar('VIRTUAL-RUNTIME_init_manager', True) == 'busybox-runit-init')]} \
 	"
 
 RRECOMMENDS_${PN}-runit-init += "${PN}-mdev ${PN}-syslog"
 
-BUSYBOX_EXTRA_PACKAGES2 += "${PN}-runit-init"
+PACKAGES =+ "${@['','busybox-runit-init'][(d.getVar('VIRTUAL-RUNTIME_init_manager', True) == 'busybox-runit-init')]}"
 
 FILES_${PN}-runit-init = "${base_sbindir}/init ${base_sbindir}/init.${PN} ${base_sbindir}/telinit ${base_sbindir}/telinit.${PN} ${base_sbindir}/initsig ${sysconfdir}/rc.local ${sysconfdir}/default ${sysconfdir}/sv ${libexecdir}/getty-tty ${sysconfdir}/default/persistent ${sysconfdir}/logrotate-dmesg.conf ${base_sbindir}/runlevel ${localstatedir}/lib/urandom ${sysconfdir}/etc/init.d/system-stop.sh ${base_sbindir}/sulogin.sh ${base_sbindir}/sushell"
 
@@ -79,7 +79,7 @@ RUNIT_SERVICES=\
 inherit runit-services
 
 do_install_append() {
-	if ${@bb.utils.contains('BUSYBOX_EXTRA_PACKAGES', 'busybox-runit-init', "true", "false", d)}; then
+	if ${@bb.utils.contains('PACKAGES', 'busybox-runit-init', "true", "false", d)}; then
 		install -d ${D}${base_sbindir}
 		install -d ${D}${sysconfdir}
 		install -d ${D}${sysconfdir}/default

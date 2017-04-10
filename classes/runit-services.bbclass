@@ -1,7 +1,7 @@
 RUNIT_SERVICES ?= ""
 
 do_install_append() {
-	if ${@bb.utils.contains('DISTRO_FEATURES', 'runitinit', "true", "false", d)}; then
+	if ${@bb.utils.contains('VIRTUAL-RUNTIME_init_manager', 'busybox-runit-init', "true", "false", d)}; then
 		install -d ${D}${sysconfdir}/sv/service
 		install -d ${D}${sysconfdir}/service
 		install -d ${D}${localstatedir}/service
