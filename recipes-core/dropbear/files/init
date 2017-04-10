@@ -27,12 +27,14 @@ test ! -r /etc/default/dropbear || . /etc/default/dropbear
 
 if [ "$(basename "${0}")" = "run" ]; then
 	. /etc/init.d/functions-ri
-	. /etc/default/rcS
+	[ -r /etc/default/rcS ] && . /etc/default/rcS
 
-	serviceup ../syslog || exit 1
-	serviceran ../1-urandom || exit 1
+	prereqok 1-networking || exit 1
+	prereqok 1-urandom || exit 1
+	prereqok 1-mountnfs || exit 1
+	prereqok 5-syslog || exit 1
 	if [ "$DELAYLOGIN" = "yes" ]; then
-		serviceran ../donesingle || exit 1
+		prereqok 1-doneall || exit 1
 	fi
 	test -x "$DAEMON" || exit 1
 fi
@@ -102,6 +104,7 @@ if [ "$(basename "${0}")" = "run" ]; then
 	test -f $DROPBEAR_ECDSAKEY && KEY_ARGS="$KEY_ARGS -r $DROPBEAR_ECDSAKEY"
 	test -f $DROPBEAR_DSSKEY && KEY_ARGS="$KEY_ARGS -r $DROPBEAR_DSSKEY"
 	test -f $DROPBEAR_RSAKEY && KEY_ARGS="$KEY_ARGS -r $DROPBEAR_RSAKEY"
+	markcompleted
 	exec "$DAEMON" -F $KEY_ARGS -p "$DROPBEAR_PORT" $DROPBEAR_EXTRA_ARGS
 fi
 

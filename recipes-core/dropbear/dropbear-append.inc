@@ -5,5 +5,4 @@ inherit runit-services
 SRC_URI_append = " \
 		file://runit-init/dropbear.run \
 		"
-RUNIT_SERVICES += "dropbear"
-
+RUNIT_SERVICES += "dropbear.log"
