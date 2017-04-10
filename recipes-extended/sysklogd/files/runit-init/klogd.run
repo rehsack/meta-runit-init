@@ -1,0 +1,8 @@
+#!/bin/sh
+
+. /etc/init.d/functions-ri
+
+prereqok 5-syslog || exit 1
+
+markcompleted
+exec /sbin/klogd -n

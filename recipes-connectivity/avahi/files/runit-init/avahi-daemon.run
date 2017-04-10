@@ -1,0 +1,6 @@
+. /etc/init.d/functions-ri
+
+prereqok 5-dbus || exit 1
+prereqok 1-networking || exit 1
+markcompleted
+exec /usr/sbin/avahi-daemon -s

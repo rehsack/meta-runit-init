@@ -1,0 +1,8 @@
+#!/bin/sh
+
+. /etc/init.d/functions-ri
+
+prereqok 1-populate-volatile || exit 1
+
+markcompleted
+exec /sbin/syslogd -n

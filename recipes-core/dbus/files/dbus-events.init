@@ -1,0 +1,42 @@
+#! /bin/sh
+#
+# -*- coding: utf-8 -*-
+# Debian init.d script for D-BUS
+# Copyright © 2003 Colin Walters <walters@debian.org>
+
+# set -e
+
+# Source function library.
+
+DAEMON=@bindir@/dbus-daemon
+NAME=dbus
+DAEMONUSER=messagebus           # must match /etc/dbus-1/system.conf
+PIDFILE=/var/run/messagebus.pid # must match /etc/dbus-1/system.conf
+UUIDDIR=/var/lib/dbus
+DESC="system message bus"
+EVENTDIR=/etc/dbus-1/event.d
+
+test -x $DAEMON || exit 0
+
+# Source defaults file; edit that file to configure this script.
+ENABLED=1
+PARAMS=""
+if [ -e /etc/default/dbus ]; then
+  . /etc/default/dbus
+fi
+
+test "$ENABLED" != "0" || exit 0
+
+if [ "$(basename "${0}")" = "run" ] ; then
+  . /etc/init.d/functions-ri
+
+  prereqok 5-dbus || exit 1
+
+  if [ -d $EVENTDIR ]; then
+      run-parts --arg=start $EVENTDIR
+  fi
+fi
+
+markran
+
+exit 0

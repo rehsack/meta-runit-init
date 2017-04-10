@@ -1,0 +1,12 @@
+#!/bin/sh
+
+. /etc/init.d/functions-ri
+
+prereqok 1-donesingle || exit 1
+prereqok 1-mountnfs || exit 1
+
+run-postinsts
+
+markran
+
+exit 0

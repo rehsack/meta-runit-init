@@ -1,0 +1,12 @@
+#!/bin/sh 
+
+if [ "$(basename "${0}")" = "run" ]; then
+	. /etc/init.d/functions-ri
+fi
+
+/sbin/modprobe uvesafb
+
+if [ "$(basename "${0}")" = "run" ]; then
+	markran
+	exit 0
+fi
