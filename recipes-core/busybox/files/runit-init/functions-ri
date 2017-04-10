@@ -30,6 +30,9 @@ prereqok() {
 		return 1
 	else
 		if echo $1 | grep -q '^5-'; then
+			if echo $1 | grep -q '^5-initial-syslog' && [ -n "$dosleep" ]; then
+				return 0
+			fi
 			pserviceup $1 || {
 				(
 					sleep 4 && pserviceup $1 || {

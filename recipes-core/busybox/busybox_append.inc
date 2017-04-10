@@ -7,6 +7,7 @@ SRC_URI_append = " \
 	file://runit-init/klogd.run \
 	file://runit-init/getty-tty.run \
 	file://runit-init/init \
+	file://runit-init/initial-syslog.run \
 	file://runit-init/initsig \
 	file://runit-init/mdev.run \
 	file://runit-init/ntpd.run \
@@ -53,6 +54,7 @@ RUNIT_SERVICES=\
 	${@bb.utils.contains('PACKAGES', '${PN}-ntpd', 'ntpd.log', '', d)} \
 	rclocal.once \
 	${@bb.utils.contains('PACKAGES', '${PN}-syslog', 'syslog', '', d)} \
+	${@bb.utils.contains('PACKAGES', '${PN}-syslog', 'initial-syslog', '', d)} \
 	"
 
 do_install_append() {

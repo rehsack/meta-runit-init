@@ -13,6 +13,7 @@ if [ "$(basename "${0}")" = "run" ]; then
 
     prereqok 1-sysfs || exit 1
     prereqok 1-banner || exit 1
+    prereqok 5-initial-syslog || exit 1
     [ -r ../1-psplash ] && {
 	prereqok 1-psplash || exit 1
     }

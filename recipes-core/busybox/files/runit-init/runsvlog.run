@@ -2,6 +2,6 @@
 
 . /etc/init.d/functions-ri
 
-prereqok 5-syslog || exit 1
+prereqok 5-initial-syslog || exit 1
 
 exec logger -s -t "$(basename "$(dirname "$(pwd)")")"

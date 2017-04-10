@@ -9,6 +9,22 @@
 ### END INIT INFO
 
 set -e
+if [ "$(basename "${0}")" = "run" ]; then
+	. /etc/init.d/functions-ri
+
+	prereqok 1-sysfs || exit 1
+fi
+
+if [ "$(basename "${0}")" = "run" ]; then
+    if [ "$(basename "$(pwd)")" = "5-initial-syslog" ]; then
+        . /etc/syslog-startup.conf
+        SYSLOG_ARGS="-C$BUFFERSIZE"
+    elif [ "$(basename "$(pwd)")" = "5-syslog" ]; then
+	prereqok 1-populate-volatile || exit 1
+	logread >>/var/log/messages
+        sv d 5-initial-syslog
+    fi
+fi
 
 if [ -f /etc/syslog-startup.conf ]; then
 	. /etc/syslog-startup.conf
@@ -52,10 +68,6 @@ else
 fi
 
 if [ "$(basename "${0}")" = "run" ]; then
-	. /etc/init.d/functions-ri
-
-	prereqok 1-populate-volatile || exit 1
-
 	dir="$(pwd)"
 	case "$(basename "$(pwd)")" in
 	5-klogd)
@@ -63,7 +75,7 @@ if [ "$(basename "${0}")" = "run" ]; then
 		markcompleted
 		exec /sbin/klogd -n ${CONSOLELEVEL:+-c $CONSOLELEVEL}
 		;;
-	5-syslog)
+	5-*syslog)
 		markcompleted
 		exec /sbin/syslogd -n $SYSLOG_ARGS
 		;;
