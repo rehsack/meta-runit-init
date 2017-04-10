@@ -40,7 +40,7 @@ if [ "$(basename "${0}")" = "run" ]; then
 
     export ACTION=add
     # propagate /dev from /sys
-    echo "Starting udev"
+    echo "Starting udev triggers"
 
     # Cache handling.
     if [ "$DEVCACHE" != "" ]; then
@@ -67,10 +67,13 @@ if [ "$(basename "${0}")" = "run" ]; then
                 PLATFORM_BUS_NOMATCH=""
             fi
             udevadm trigger --action=add --subsystem-nomatch=tty --subsystem-nomatch=mem --subsystem-nomatch=vc --subsystem-nomatch=vtconsole --subsystem-nomatch=misc --subsystem-nomatch=dcon --subsystem-nomatch=pci_bus --subsystem-nomatch=graphics --subsystem-nomatch=backlight --subsystem-nomatch=video4linux $PLATFORM_BUS_NOMATCH
-            (udevadm settle --timeout=3; udevadm control --env=STARTUP=)&
+            udevadm settle --timeout=3; udevadm control --env=STARTUP=
     else
             udevadm trigger --action=add
             udevadm settle
     fi
+fi
+if [ "$(basename "${0}")" = "run" ]; then
+    markran
 fi
 exit 0

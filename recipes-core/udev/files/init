@@ -51,7 +51,6 @@ start)
     if [ "$(basename "${0}")" = "run" ]; then
         . /etc/init.d/functions-ri
 
-       prereqok 1-urandom || exit 1
        prereqok 1-checkroot || exit 1
        [ -r ../1-modutils ] && {
            prereqok 1-modutils || exit 1
