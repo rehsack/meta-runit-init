@@ -22,15 +22,15 @@ servicedown() {
 }
 
 prereqok() {
-	dosleep=$2
+	nosleep=$2
 	sleepcmd=""
-	[ -z "$dosleep" ] && sleepcmd="sleep 2"
+	[ -z "$nosleep" ] && sleepcmd="sleep 2"
 	if ! test -e /run/service-progress/completed-scripts/$1; then
 		$sleepcmd
 		return 1
 	else
 		if echo $1 | grep -q '^5-'; then
-			if echo $1 | grep -q '^5-initial-syslog' && [ -n "$dosleep" ]; then
+			if echo $1 | grep -q '^5-initial-syslog' && [ -n "$nosleep" ]; then
 				return 0
 			fi
 			pserviceup $1 || {
