@@ -21,6 +21,7 @@ SRC_URI_append = " \
 	file://runit-init/telinit \
 	${@['','file://runit.cfg'][(d.getVar('VIRTUAL-RUNTIME_runit', True) == 'busybox')]} \
 	${@['','file://runit.cfg'][(d.getVar('VIRTUAL-RUNTIME_init_manager', True) == 'busybox-runit-init')]} \
+	${@['','file://syslogd.cfg'][(d.getVar('VIRTUAL-RUNTIME_syslog', True) == 'busybox-syslog')]} \
 	"
 
 RDEPENDS_busybox-runit-init =+ "${VIRTUAL-RUNTIME_syslog} initscripts"
