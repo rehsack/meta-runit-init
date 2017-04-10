@@ -44,14 +44,14 @@ CONFFILES_${PN}-runit-init = "${sysconfdir}/default/rcS"
 
 RUNIT_SERVICES=\
 	" \
-	${@bb.utils.contains('BUSYBOX_EXTRA_PACKAGES', '${PN}-cron', 'crond.log', '', d)} \
-	${@bb.utils.contains('BUSYBOX_EXTRA_PACKAGES', '${PN}-syslog', 'klogd', '', d)} \
-	${@bb.utils.contains('BUSYBOX_EXTRA_PACKAGES', '${PN}-mdev', 'mdev.once.log', '', d)} \
-	${@bb.utils.contains('BUSYBOX_EXTRA_PACKAGES', '${PN}-ntpd', 'ntpd.log', '', d)} \
-	${@bb.utils.contains('BUSYBOX_EXTRA_PACKAGES', '${PN}-syslog', 'syslog', '', d)} \
+	${@bb.utils.contains('PACKAGES', '${PN}-cron', 'crond.log', '', d)} \
 	donesingle.once \
 	doneall.once \
+	${@bb.utils.contains('PACKAGES', '${PN}-syslog', 'klogd', '', d)} \
+	${@bb.utils.contains('VIRTUAL-RUNTIME_dev_manager', 'busybox-mdev', 'mdev.once.log', '', d)} \
+	${@bb.utils.contains('PACKAGES', '${PN}-ntpd', 'ntpd.log', '', d)} \
 	rclocal.once \
+	${@bb.utils.contains('PACKAGES', '${PN}-syslog', 'syslog', '', d)} \
 	"
 
 do_install_append() {
