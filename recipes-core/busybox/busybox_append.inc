@@ -32,17 +32,13 @@ FILES_${PN}-runit-init = "${base_sbindir}/init ${base_sbindir}/init.${BPN} ${bas
 
 inherit update-alternatives runit-services
 
-ALTERNATIVE_${PN}_append = "init telinit poweroff halt reboot"
-ALTERNATIVE_LINK_NAME[init] = "${base_sbindir}/init"
-ALTERNATIVE_PRIORITY[init] = "15"
-ALTERNATIVE_LINK_NAME[telinit] = "${base_sbindir}/telinit"
-ALTERNATIVE_PRIORITY[telinit] = "15"
-ALTERNATIVE_LINK_NAME[poweroff] = "${base_sbindir}/poweroff"
-ALTERNATIVE_PRIORITY[poweroff] = "15"
-ALTERNATIVE_LINK_NAME[halt] = "${base_sbindir}/halt"
-ALTERNATIVE_PRIORITY[halt] = "15"
-ALTERNATIVE_LINK_NAME[reboot] = "${base_sbindir}/reboot"
-ALTERNATIVE_PRIORITY[reboot] = "15"
+ALTERNATIVE_${PN}_append += "init_runit telinit_runit"
+ALTERNATIVE_LINK_NAME[init_runit] = "${base_sbindir}/init"
+ALTERNATIVE_TARGET[init_runit] = "${base_sbindir}/init.${PN}-runit-init"
+ALTERNATIVE_PRIORITY[init_runit] = "70"
+ALTERNATIVE_LINK_NAME[telinit_runit] = "${base_sbindir}/telinit"
+ALTERNATIVE_PRIORITY[telinit_runit] = "70"
+ALTERNATIVE_TARGET[telinit_runit] = "${base_sbindir}/telinit.${PN}-runit-init"
 
 CONFFILES_${PN}-runit-init = "${sysconfdir}/default/rcS"
 
@@ -68,14 +64,14 @@ do_install_append() {
 		# Holds state information pertaining to urandom
 		install -d ${D}${localstatedir}/lib/urandom
 
-		install -m 0755 ${WORKDIR}/runit-init/init ${D}${base_sbindir}/init.${BPN}
-		install -m 0755 ${WORKDIR}/runit-init/telinit ${D}${base_sbindir}/telinit.${BPN}
+		install -m 0755 ${WORKDIR}/runit-init/init ${D}${base_sbindir}/init.${BPN}-runit-init
+		install -m 0755 ${WORKDIR}/runit-init/telinit ${D}${base_sbindir}/telinit.${BPN}-runit-init
 		install -m 0755 ${WORKDIR}/runit-init/sulogin.sh ${D}${base_sbindir}/sulogin.sh
 		install -m 0755 ${WORKDIR}/runit-init/rc.local.sample ${D}${sysconfdir}/rc.local
 		install -m 0644 ${WORKDIR}/runit-init/rcS-default ${D}${sysconfdir}/default/rcS
 		install -m 0755 ${WORKDIR}/runlevel ${D}${base_sbindir}/runlevel
 		install -m 0755 ${WORKDIR}/runit-init/initsig ${D}${base_sbindir}/initsig
-		for iscript in ${D}${base_sbindir}/init.${BPN} ${D}${base_sbindir}/initsig; do
+		for iscript in ${D}${base_sbindir}/init.${BPN}-runit-init ${D}${base_sbindir}/initsig; do
 			sed -e "s,/var,${localstatedir}," $iscript
 		done
 
