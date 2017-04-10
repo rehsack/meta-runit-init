@@ -1,15 +1,10 @@
 
 SRC_URI_append = " \
-	file://runit-init/banner.run \
 	file://runit-init/crond.run\
-	file://runit-init/dmesglog.run \
+	file://runit-init/doneall.run \
 	file://runit-init/donesingle.run \
 	file://runit-init/functions-ri \
-	file://runit-init/hostname.run \
 	file://runit-init/klogd.run \
-	file://runit-init/loadmodules.run \
-	file://runit-init/localmounts.run \
-	file://runit-init/logrotate-dmesg.conf \
 	file://runit-init/getty-tty.run \
 	file://runit-init/init \
 	file://runit-init/initsig \
@@ -18,27 +13,23 @@ SRC_URI_append = " \
 	file://runit-init/rc.local.sample \
 	file://runit-init/rclocal.run \
 	file://runit-init/rcS-default \
-	file://runit-init/rootfs.run \
 	file://runit-init/runsvlog.run \
 	file://runit-init/sulogin.sh \
-	file://runit-init/sushell \
 	file://runit-init/syslog.run \
 	file://runit-init/system-stop.sh \
 	file://runit-init/telinit \
-	file://runit-init/urandom.run \
-	${@bb.utils.contains('DISTRO_FEATURES','selinux','file://runit-init/sushell','',d)} \
 	${@['','file://runit.cfg'][(d.getVar('VIRTUAL-RUNTIME_runit', True) == 'busybox')]} \
 	${@['','file://runit.cfg'][(d.getVar('VIRTUAL-RUNTIME_init_manager', True) == 'busybox-runit-init')]} \
 	"
 
-RRECOMMENDS_${PN}-runit-init += "${PN}-mdev ${PN}-syslog"
+RDEPENDS_busybox-runit-init =+ "${VIRTUAL-RUNTIME_syslog} initscripts"
 RRECOMMENDS_busybox-runit-init =+ "kernel-module-overlay"
 
 PACKAGES =+ "${@['','busybox-runit-init'][(d.getVar('VIRTUAL-RUNTIME_init_manager', True) == 'busybox-runit-init')]}"
 
 FILES_${PN}-runit-init = "${base_sbindir}/init ${base_sbindir}/init.${PN} ${base_sbindir}/telinit ${base_sbindir}/telinit.${PN} ${base_sbindir}/initsig ${sysconfdir}/rc.local ${sysconfdir}/default ${sysconfdir}/sv ${libexecdir}/getty-tty ${sysconfdir}/default/persistent ${sysconfdir}/logrotate-dmesg.conf ${base_sbindir}/runlevel ${localstatedir}/lib/urandom ${sysconfdir}/etc/init.d/system-stop.sh ${base_sbindir}/sulogin.sh ${base_sbindir}/sushell"
 
-inherit update-alternatives
+inherit update-alternatives runit-services
 
 ALTERNATIVE_${PN}_append = "init telinit poweroff halt reboot"
 ALTERNATIVE_LINK_NAME[init] = "${base_sbindir}/init"
@@ -60,20 +51,14 @@ CONFFILES_${PN}-runit-init = "${sysconfdir}/default/persistent/20_runit_init ${s
 
 RUNIT_SERVICES=\
 	" \
-	banner.once \
 	${@bb.utils.contains('BUSYBOX_EXTRA_PACKAGES', '${PN}-cron', 'crond.log', '', d)} \
-	dmesglog.once \
-	donesingle \
-	hostname.once \
 	${@bb.utils.contains('BUSYBOX_EXTRA_PACKAGES', '${PN}-syslog', 'klogd', '', d)} \
-	loadmodules.once \
-	localmounts.once.log \
 	${@bb.utils.contains('BUSYBOX_EXTRA_PACKAGES', '${PN}-mdev', 'mdev.once.log', '', d)} \
 	${@bb.utils.contains('BUSYBOX_EXTRA_PACKAGES', '${PN}-ntpd', 'ntpd.log', '', d)} \
-	rclocal \
-	rootfs.once \
 	${@bb.utils.contains('BUSYBOX_EXTRA_PACKAGES', '${PN}-syslog', 'syslog', '', d)} \
-	urandom.once.log \
+	donesingle.once \
+	doneall.once \
+	rclocal.once \
 	"
 
 inherit runit-services
@@ -90,7 +75,6 @@ do_install_append() {
 		install -m 0755 ${WORKDIR}/runit-init/init ${D}${base_sbindir}/init.${BPN}
 		install -m 0755 ${WORKDIR}/runit-init/telinit ${D}${base_sbindir}/telinit.${BPN}
 		install -m 0755 ${WORKDIR}/runit-init/sulogin.sh ${D}${base_sbindir}/sulogin.sh
-		install -m 0755 ${WORKDIR}/runit-init/sushell ${D}${base_sbindir}/sushell
 		install -m 0755 ${WORKDIR}/runit-init/rc.local.sample ${D}${sysconfdir}/rc.local
 		install -m 0644 ${WORKDIR}/runit-init/rcS-default ${D}${sysconfdir}/default/rcS
 		install -m 0755 ${WORKDIR}/runlevel ${D}${base_sbindir}/runlevel
@@ -123,8 +107,6 @@ do_install_append() {
 		# Common log service for services that need it.
 		install -d ${D}${sysconfdir}/sv
 		install -m 0755 ${WORKDIR}/runit-init/runsvlog.run ${D}${sysconfdir}/sv/service
-
-		install -m 0644 ${WORKDIR}/runit-init/logrotate-dmesg.conf ${D}${sysconfdir}/
 
 		# Make sure timestamp exists
 		touch ${D}${sysconfdir}/timestamp

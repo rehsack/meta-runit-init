@@ -6,21 +6,17 @@
 TMPTIME=0
 # Set to yes if you want sulogin to be spawned on bootup
 SULOGIN=no
-# Seconds to wait for sulogin if SULOGIN=yes
-SULOGIN_TIMEOUT=10
 # Set to no if you want to be able to login over telnet/rlogin
 # before system startup is complete (as soon as inetd is started)
-SUSHELL=/sbin/sushell
-# Set to the path of shell to execute for sulogin
 DELAYLOGIN=no
 # Assume that the BIOS clock is set to UTC time (recommended)
 UTC=yes
 # Set VERBOSE to "no" if you would like a more quiet bootup.
 VERBOSE=no
 # Set EDITMOTD to "no" if you don't want /etc/motd to be edited automatically
-EDITMOTD=yes
+EDITMOTD=no
 # Whether to fsck root on boot
-ENABLE_ROOTFS_FSCK=yes
+ENABLE_ROOTFS_FSCK=no
 # Set FSCKFIX to "yes" if you want to add "-y" to the fsck at startup.
 FSCKFIX=yes
 # Set TICKADJ to the correct tick value for this specific machine
@@ -31,19 +27,3 @@ VOLATILE_ENABLE_CACHE=yes
 # Setting ROOTFS_READ_ONLY to yes and rebooting will give you a read-only rootfs.
 # Normally you should not change this value.
 ROOTFS_READ_ONLY=no
-# Normally root is on RW media; for e.g. ISO this is
-# not true and persistent storage must be on another
-# device; also setting this to yes forces persistent
-# storage to be on another device
-ROOT_RO_MEDIA=no
-# Allow to override not checking read-only rootfs (e.g. for ext4
-# mounted ro on rw media).
-FSCK_RO_ROOTFS=no
-# runit-based init
-RUNITINIT=yes
-# if not yet any persistent storage, find free space at end of root
-# device and partition and format it, unless using an iso (ROOT_RO_MEDIA)
-# or unable to do the former, in which case find, partition, and format
-# a block device.  # (but only [hsv]dX, mmcblk*, nvme*)
-# (e.g. magnetic/flash/virtual drives)
-PARTITION_PERSISTENT_DEVICE=yes

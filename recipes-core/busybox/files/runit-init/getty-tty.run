@@ -1,25 +1,26 @@
 #!/bin/sh
 
 DIRN="$(basename "$(pwd)")"
-TTYN="${DIRN##getty-}"
+TTYN="${DIRN##5-getty-}"
 BAUD="${TTYN##*-}"
 TTYN="${TTYN%%-*}"
 
 . /etc/init.d/functions-ri
 . /etc/default/rcS
 
-if [ "$DELAYLOGIN" = "yes" ]; then
-	serviceran ../donesingle || exit 1
-else
-	serviceran ../1-hostname || exit 1
-	serviceran ../1-localmounts || exit 1
-fi
+prereqok 5-syslog || exit 1
 
-serviceup ../syslog || exit 1
+if [ "$DELAYLOGIN" = "yes" ]; then
+	prereqok 1-donesingle || exit 1
+else
+	prereqok 1-hostname || exit 1
+	prereqok 1-urandom || exit 1
+fi
 
 if ! test -e /dev/$TTYN; then
 	sleep 60
 	exit 1
 else
+	markcompleted
 	exec /sbin/getty -L $BAUD $TTYN
 fi

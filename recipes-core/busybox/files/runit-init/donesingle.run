@@ -2,14 +2,16 @@
 
 . /etc/init.d/functions-ri
 
-for service in $(ls -A ../1-*); do
-	case "$service" in
-	*)
-		serviceran ../"$service" || serviceup ../"$service" || exit 1
-		;;
-	esac
-done
+numsteps="$(cat /run/service-progress/completed-steps/single_steps)"
+totalsteps="$(cat /run/service-progress/completed-steps/total_single_steps)"
 
-serviceup ../syslog || exit 1
+if [ "$totalsteps" -gt 0 ]; then
+	totalsteps=$((totalsteps - 4))
 
-markran
+	if [ "$totalsteps" -gt 0 ] && [ "$numsteps" -ge "$totalsteps" ]; then
+		markran
+		exit 0
+	fi
+fi
+
+exit 1

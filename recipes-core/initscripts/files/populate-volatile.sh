@@ -8,6 +8,13 @@
 # Short-Description:  Populate the volatile filesystem
 ### END INIT INFO
 
+if [ "$(basename "${0}")" = "run" ]; then
+    [ -r /etc/init.d/functions-ri ] && . /etc/init.d/functions-ri
+
+    prereqok 1-mountall || exit 1
+    prereqok 1-read-only-rootfs-hook || exit 1
+fi
+
 # Get ROOT_DIR
 DIRNAME=`dirname $0`
 ROOT_DIR=`echo $DIRNAME | sed -ne 's:/etc/.*::p'`
@@ -229,4 +236,9 @@ fi
 if [ -z "${ROOT_DIR}" ] && [ -f /etc/ld.so.cache ] && [ ! -f /var/run/ld.so.cache ]
 then
 	ln -s /etc/ld.so.cache /var/run/ld.so.cache
+fi
+
+if [ "$(basename "${0}")" = "run" ]; then
+    markran
+    exit 0
 fi

@@ -1,0 +1,18 @@
+#!/bin/sh
+
+. /etc/init.d/functions-ri
+
+numsteps="$(cat /run/service-progress/completed-steps/steps)"
+totalsteps="$(cat /run/service-progress/completed-steps/total_steps)"
+gettysteps="$(cd /var/service && ls -Ad 5-*getty* 2>/dev/null|wc -l)"
+
+if [ "$totalsteps" -gt 0 ]; then
+	totalsteps=$((totalsteps - $((gettysteps + 3)) ))
+
+	if [ "$totalsteps" -gt 0 ] && [ "$numsteps" -ge "$totalsteps" ]; then
+		markran
+		exit 0
+	fi
+fi
+
+exit 1
