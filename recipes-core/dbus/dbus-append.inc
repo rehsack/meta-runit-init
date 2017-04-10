@@ -10,6 +10,8 @@ SRC_URI_append = " \
 RUNIT_SERVICES += "dbus.log dbus-events.once.log"
 
 do_install_append() {
-     sed -i s%@bindir@%${bindir}% ${D}${sysconfdir}/sv/service/dbus.run
-     sed -i s%@bindir@%${bindir}% ${D}${sysconfdir}/sv/service/dbus-events.run
+     if ${@bb.utils.contains("VIRTUAL-RUNTIME_init_manager", "busybox-runit-init", "true", "false", d)}; then
+         sed -i s%@bindir@%${bindir}% ${D}${sysconfdir}/sv/service/dbus.run
+         sed -i s%@bindir@%${bindir}% ${D}${sysconfdir}/sv/service/dbus-events.run
+     fi
 }

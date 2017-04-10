@@ -8,5 +8,7 @@ SRC_URI_append = " \
 RUNIT_SERVICES += "bluetoothd.log"
 
 do_install_append() {
-	sed -i -e 's%@LIBEXECDIR@%${libexecdir}%g' ${D}${sysconfdir}/sv/service/bluetoothd.run
+	if ${@bb.utils.contains('VIRTUAL-RUNTIME_init_manager', 'busybox-runit-init', 'true', 'false', d)}; then
+		sed -i -e 's%@LIBEXECDIR@%${libexecdir}%g' ${D}${sysconfdir}/sv/service/bluetoothd.run
+	fi
 }

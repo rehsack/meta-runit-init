@@ -8,5 +8,7 @@ SRC_URI_append = " \
 RUNIT_SERVICES += "alsa-state.once"
 
 do_install_append() {
-	sed -i -e 's%#STATEDIR#%${localstatedir}%' ${D}${sysconfdir}/sv/service/alsa-state.run
+	if ${@bb.utils.contains('VIRTUAL-RUNTIME_init_manager', 'busybux-runit-init', 'true', 'false', d)}; then
+		sed -i -e 's%#STATEDIR#%${localstatedir}%' ${D}${sysconfdir}/sv/service/alsa-state.run
+	fi
 }
