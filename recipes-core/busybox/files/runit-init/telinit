@@ -20,20 +20,20 @@ sulogincmd=sulogin.sh
 
 case $1 in
 0)
-	exec setsid sh -c "kill -HUP $PPID; kill -TERM $PPDI; exec kill -USR1 1"
+	exec sh -c "kill -HUP $PPID; kill -TERM $PPDI; exec kill -USR1 1"
 	;;
 6)
-	exec setsid sh -c "kill -HUP $PPID; kill -TERM $PPID; exec kill -TERM 1"
+	exec sh -c "kill -HUP $PPID; kill -TERM $PPID; exec kill -TERM 1"
 	;;
 q | 2 | 3 | 4 | 5 | u)
 	kill -HUP 1
 	;;
 1)
-	exec setsid sh -c "kill -HUP $PPID; kill -TERM $PPID; exec kill -USR2 1"
+	exec sh -c "kill -HUP $PPID; kill -TERM $PPID; exec kill -USR2 1"
 	;;
 S)
 	echo "Quick (unclean) single user now..."|logger -t init -s 2>/dev/console
-	setsid sh -c 'kill -HUP '"$PPID"' kill -TERM '"$PPID"'
+	sh -c 'kill -HUP '"$PPID"' kill -TERM '"$PPID"'
 	sv down $(ls -Ad /var/service/5-getty-*) 2>/dev/null
 	sleep 10
 	for ttyn in /dev/tty[0-9][0-9]*; do
