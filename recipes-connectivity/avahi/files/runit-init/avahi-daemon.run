@@ -1,3 +1,5 @@
+#!/bin/sh
+
 . /etc/init.d/functions-ri
 
 prereqok 5-dbus || exit 1
