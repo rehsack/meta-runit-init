@@ -34,14 +34,6 @@ FILES_${PN}-runit-init = "${base_sbindir}/init ${base_sbindir}/init.${BPN} ${bas
 
 inherit update-alternatives runit-services
 
-ALTERNATIVE_${PN}_append += "init_runit telinit_runit"
-ALTERNATIVE_LINK_NAME[init_runit] = "${base_sbindir}/init"
-ALTERNATIVE_TARGET[init_runit] = "${base_sbindir}/init.${PN}-runit-init"
-ALTERNATIVE_PRIORITY[init_runit] = "70"
-ALTERNATIVE_LINK_NAME[telinit_runit] = "${base_sbindir}/telinit"
-ALTERNATIVE_PRIORITY[telinit_runit] = "70"
-ALTERNATIVE_TARGET[telinit_runit] = "${base_sbindir}/telinit.${PN}-runit-init"
-
 CONFFILES_${PN}-runit-init = "${sysconfdir}/default/rcS"
 
 RUNIT_SERVICES=\
