@@ -23,6 +23,11 @@ if [ -e /run ] && ! grep -q ' /run ' /proc/mounts; then
 	fi
 fi
 
+mkdir -p /run/service-progress/completed-scripts
+mkdir -p /run/service-progress/completed-steps
+echo 0 >/run/service-progress/completed-steps/steps
+echo 0 >/run/service-progress/completed-steps/single_steps
+
 if is_read_only_directory /var/service; then
 (
 	set -e
@@ -49,6 +54,9 @@ if is_read_only_directory /var/service; then
 	$usecttyhack sulogin $CONSOLE	
 }
 fi
+
+(cd /var/service && ls -A | wc -l) >/run/service-progress/completed-steps/total_steps
+(cd /var/service && ls -Ad 1-* | wc -l) >/run/service-progress/completed-steps/total_single_steps
 
 if [ -z "$(cd /var/service && ls -A)" ] || is_read_only_directory /var/service; then
 	echo "FATAL: No runnable runit startup scripts.  Dropping to single user shell."

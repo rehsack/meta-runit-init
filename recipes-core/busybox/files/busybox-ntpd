@@ -37,7 +37,7 @@ done
 if [ "$(basename "${0}")" = "run" ]; then
 	. /etc/init.d/functions-ri
 
-	serviceran ../1-rootfs || exit 1
+	prereqok 1-bootmisc || exit 1
 	# Initial get date/time
 	/usr/sbin/ntpd -q -N -n -p $NTP_UPSTREAM_SERVERS 2>&1 && {
 		# Update stored time so next boot has better time
@@ -48,6 +48,7 @@ if [ "$(basename "${0}")" = "run" ]; then
 		exit 1
 	}
 
+	markcompleted
 	exec /usr/sbin/ntpd -n -N $NTPD_ARGS 2>&1
 fi
 

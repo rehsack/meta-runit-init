@@ -1,13 +1,13 @@
 #!/bin/sh
 
-serviceup() {
+pserviceup() {
 	uptime="$2"
-	[ -z "$uptime" ] && uptime=2
+	[ -z "$uptime" ] && uptime=4
 	depstatus="$(sv s "$1")"
 	if echo "$depstatus"| grep '^run:' | grep -q '[0-9][0-9]*s'; then
 		rantime="${depstatus##* }"
 		rantime="${rantime%%s}"
-		if [ "$rantime" -ge "$uptime" ]; then
+		if [ "$rantime" -ge "$uptime" ] 2>/dev/null; then
 			return 0
 		fi
 	fi
@@ -21,19 +21,47 @@ servicedown() {
 	return 1
 }
 
-serviceran() {
-	if servicedown "$1"; then
-		if ! sv s "$1" | grep -q 'want up'; then
-			return 0
+prereqok() {
+	dosleep=$2
+	sleepcmd=""
+	[ -z "$dosleep" ] && sleepcmd="sleep 2"
+	if ! test -e /run/service-progress/completed-scripts/$1; then
+		$sleepcmd
+		return 1
+	else
+		if echo $1 | grep -q '^5-'; then
+			pserviceup $1 || {
+				(
+					sleep 4 && pserviceup $1 || {
+						unmarkcompleted $1
+					}
+				) &
+				$sleepcmd
+				return 1
+			}
 		fi
 	fi
-	return 1
+	return 0
+}
+
+unmarkcompleted() {
+	(
+		if [ -n "$1" ]; then
+			cd /var/service/$1
+		fi
+		rm -f /run/service-progress/completed-scripts/"$(basename "$(pwd)")"
+	)
+}
+
+markcompleted() {
+	touch /run/service-progress/completed-scripts/"$(basename "$(pwd)")"
 }
 
 markran() {
 	if [ -d "$(pwd)/log" ]; then
 		sv d "$(pwd)/log"
 	fi
+	markcompleted
 	exec sv d "$(basename "$(pwd)")"
 }
 

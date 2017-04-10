@@ -10,8 +10,10 @@ set -e
 
 if [ "$(basename "${0}")" = "run" ]; then
 	. /etc/init.d/functions-ri
-	serviceup ../syslog
 
+	prereqok 5-syslog || exit 1
+
+	markcompleted
 	exec $DAEMON -f -S $ARGS
 fi
 

@@ -1,0 +1,60 @@
+#!/bin/sh
+
+. /etc/init.d/functions-ri
+
+[ -r /etc/default/rcS ] && . /etc/default/rcS
+
+origdir="$(pwd)"
+cd /run/service-progress
+
+mkdir -p completed-scripts
+mkdir -p completed-steps
+mkdir -p counted-scripts
+
+first_step=0
+progress_size=100
+num_steps="$(ls -A /var/service|wc -l)"
+num_single_steps="$(ls -Ad /var/service/1-*|wc -l)"
+
+echo $num_steps >completed-steps/total_steps
+echo $num_single_steps >completed-steps/total_single_steps
+num_steps=$((num_steps - 1))
+
+while true; do
+	sleep 10
+	step=0
+	sstep=0
+        svlist="$(cd /var/service && ls -A)"
+        for service in $svlist; do
+		if prereqok $service 1; then
+			step=$((step + 1))
+			echo $service|grep -q '^1-' && sstep=$((sstep + 1))
+		fi
+        done
+
+	echo $step >completed-steps/steps
+	echo $sstep >completed-steps/single_steps
+
+        if [ "$num_steps" -gt 0 ]; then
+            progress=$(( ($step * $progress_size / $num_steps) + $first_step))
+        else
+            progress=$progress_size
+        fi
+
+        [ "$VERBOSE" = "yes" ] && echo "PROGRESS $progress step $step of $num_steps"
+        if [ -e /mnt/.psplash/psplash_fifo ]; then
+            echo "PROGRESS $progress" > /mnt/.psplash/psplash_fifo
+        fi
+
+        if [ $step -ge $num_steps ]; then
+            if [ -e /mnt/.psplash/psplash_fifo ]; then
+	         echo "QUIT" >/mnt/.psplash/psplash_fifo
+		 [ "$VERBOSE" = "yes" ] && [ -x "$(which uptime)" ] && uptime
+            fi
+            break
+        fi
+done
+
+cd $origdir
+markran
+exit 0

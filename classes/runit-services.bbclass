@@ -1,5 +1,7 @@
 RUNIT_SERVICES ?= ""
 
+FILES_${PN} =+ "${sysconfdir}/sv ${sysconfdir}/service ${localstatedir}/service"
+
 do_install_append() {
 	if ${@bb.utils.contains('VIRTUAL-RUNTIME_init_manager', 'busybox-runit-init', "true", "false", d)}; then
 		install -d ${D}${sysconfdir}/sv/service
@@ -14,15 +16,17 @@ do_install_append() {
 			fi
 			servicename="$(basename "$oncename" .once)"
 			if [ "$servicename" != "$oncename" ]; then
-				once=1
+				once=1-
+                        else
+				once=5-
 			fi
-			install -d ${D}${sysconfdir}/service/${once:+1-}${servicename}
+			install -d ${D}${sysconfdir}/service/${once}${servicename}
 			install -m 0755 ${WORKDIR}/runit-init/${servicename}.run ${D}${sysconfdir}/sv/service
-			ln -sf ${sysconfdir}/sv/service/${servicename}.run ${D}${sysconfdir}/service/${once:+1-}${servicename}/run
+			ln -sf ${sysconfdir}/sv/service/${servicename}.run ${D}${sysconfdir}/service/${once}${servicename}/run
 
 			if [ "$log" = "1" ]; then
-       	                	install -d ${D}${sysconfdir}/service/${once:+1-}${servicename}/log
-       	                	ln -sf ${sysconfdir}/sv/service/runsvlog.run ${D}${sysconfdir}/service/${once:+1-}${servicename}/log/run
+				install -d ${D}${sysconfdir}/service/${once}${servicename}/log
+				ln -sf ${sysconfdir}/sv/service/runsvlog.run ${D}${sysconfdir}/service/${once}${servicename}/log/run
 			fi
 		done
 		if ${@bb.utils.contains('DISTRO_FEATURES', 'read-only-rootfs', 'false', 'true', d)}; then

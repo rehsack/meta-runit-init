@@ -28,13 +28,13 @@ q | 2 | 3 | 4 | 5 | u)
 S)
 	echo "Quick (unclean) single user now..."|logger -t init -s 2>/dev/console
 	setsid sh -c 'kill -HUP '"$PPID"' kill -TERM '"$PPID"'
-	sv down $(ls -Ad /var/service/getty-*) 2>/dev/null
+	sv down $(ls -Ad /var/service/5-getty-*) 2>/dev/null
 	sleep 10
 	for ttyn in /dev/tty[0-9][0-9]*; do
 		deallocvt ${ttyn##/dev/tty} 2>/dev/null
 	done
 	setsid cttyhack sulogin.sh $CONSOLE
-	exec setsid sv up $(ls -Ad /var/service/getty-*) 2>/dev/null'
+	exec sv up $(ls -Ad /var/service/5-getty-*) 2>/dev/null'
 	;;
 *)
 	echo "telinit: unknown command"

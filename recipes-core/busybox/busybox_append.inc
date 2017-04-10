@@ -14,6 +14,7 @@ SRC_URI_append = " \
 	file://runit-init/rclocal.run \
 	file://runit-init/rcS-default \
 	file://runit-init/runsvlog.run \
+        file://runit-init/service_progress.run \
 	file://runit-init/sulogin.sh \
 	file://runit-init/syslog.run \
 	file://runit-init/system-stop.sh \
@@ -61,14 +62,13 @@ RUNIT_SERVICES=\
 	rclocal.once \
 	"
 
-inherit runit-services
-
 do_install_append() {
 	if ${@bb.utils.contains('PACKAGES', 'busybox-runit-init', "true", "false", d)}; then
 		install -d ${D}${base_sbindir}
 		install -d ${D}${sysconfdir}
 		install -d ${D}${sysconfdir}/default
 		install -d ${D}${libexecdir}/getty-tty
+		install -d ${D}${localstatedir}/service
 		# Holds state information pertaining to urandom
 		install -d ${D}${localstatedir}/lib/urandom
 
@@ -93,6 +93,7 @@ do_install_append() {
 		install -d ${D}${sysconfdir}/sv/service
 		install -d ${D}${localstatedir}/service
 		install -m 0755 ${WORKDIR}/runit-init/getty-tty.run ${D}${sysconfdir}/sv/service
+		install -m 0755 ${WORKDIR}/runit-init/service_progress.run ${D}${sysconfdir}/sv/service
 
 		consoles="115200;tty1 115200;tty2 115200;tty3 115200;tty4 ${SERIAL_CONSOLES}"
 		for console in $consoles; do
@@ -100,9 +101,11 @@ do_install_append() {
 			IFS=";"
 			set -- $console
 			IFS="$oIFS"
-			install -d ${D}${sysconfdir}/service/getty-$2-$1
-			ln -sf ${sysconfdir}/sv/service/getty-tty.run ${D}${sysconfdir}/service/getty-$2-$1/run
+			install -d ${D}${sysconfdir}/service/5-getty-$2-$1
+			ln -sf ${sysconfdir}/sv/service/getty-tty.run ${D}${sysconfdir}/service/5-getty-$2-$1/run
 		done
+		install -d ${D}${sysconfdir}/service/0-service_progress
+		ln -sf ${sysconfdir}/sv/service/service_progress.run ${D}${sysconfdir}/service/0-service_progress/run
 
 		# Common log service for services that need it.
 		install -d ${D}${sysconfdir}/sv

@@ -54,16 +54,17 @@ fi
 if [ "$(basename "${0}")" = "run" ]; then
 	. /etc/init.d/functions-ri
 
-	serviceran ../1-hostname || exit 1
-	serviceran ../1-rootfs || exit 1	
+	prereqok 1-populate-volatile || exit 1
 
 	dir="$(pwd)"
 	case "$(basename "$(pwd)")" in
-	klogd)
-		serviceup ../syslog || exit 1
+	5-klogd)
+		prereqok 5-syslog || exit 1
+		markcompleted
 		exec /sbin/klogd -n ${CONSOLELEVEL:+-c $CONSOLELEVEL}
 		;;
-	syslog)
+	5-syslog)
+		markcompleted
 		exec /sbin/syslogd -n $SYSLOG_ARGS
 		;;
 	esac	
