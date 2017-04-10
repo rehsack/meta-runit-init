@@ -12,6 +12,12 @@ killservices() {
 	done
 }
 
+
+sulogincmd=sulogin.sh
+[ -x "$(which $sulogincmd)" ] || sulogincmd=sulogin
+
+[ -z "$CONSOLE" ] && CONSOLE=/dev/console
+
 case $1 in
 0)
 	exec setsid sh -c "kill -HUP $PPID; kill -TERM $PPDI; exec kill -USR1 1"
@@ -33,7 +39,7 @@ S)
 	for ttyn in /dev/tty[0-9][0-9]*; do
 		deallocvt ${ttyn##/dev/tty} 2>/dev/null
 	done
-	setsid cttyhack sulogin.sh $CONSOLE
+	$sulogincmd $CONSOLE
 	exec sv up $(ls -Ad /var/service/5-getty-*) 2>/dev/null'
 	;;
 *)

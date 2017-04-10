@@ -14,9 +14,10 @@ killservices() {
 	done
 }
 
-[ -z "$CONSOLE" ] && CONSOLE=/dev/console
+sulogincmd=sulogin.sh
+[ -x "$(which $sulogincmd)" ] || sulogincmd=sulogin
 
-exec </dev/console >/dev/console 2>/dev/console
+[ -z "$CONSOLE" ] && CONSOLE=/dev/console
 
 case $1 in
 10 | USR1 )
@@ -30,9 +31,7 @@ case $1 in
 	echo "Going to single user now..."|logger -t init -s 2>&1
 	# USR2 = single user
 	killservices
-	usecttyhack=""
-	[ -x "$(which cttyhack)" ] && usecttyhack=cttyhack
-	setsid $usecttyhack sulogin $CONSOLE
+	$sulogincmd $CONSOLE
 	exec reboot -f
 	;;
 2 | INT | 15 | TERM )

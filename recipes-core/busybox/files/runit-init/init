@@ -28,6 +28,11 @@ mkdir -p /run/service-progress/completed-steps
 echo 0 >/run/service-progress/completed-steps/steps
 echo 0 >/run/service-progress/completed-steps/single_steps
 
+sulogincmd=sulogin.sh
+[ -x "$(which $sulogincmd)" ] || sulogincmd=sulogin
+
+[ -z "$CONSOLE" ] && CONSOLE=/dev/console
+
 if is_read_only_directory /var/service; then
 (
 	set -e
@@ -50,8 +55,7 @@ if is_read_only_directory /var/service; then
 	fi
 ) || {
 	echo "FATAL: Unable to mount /var/service as writable."
-	[ -x "$(which cttyhack)" ] && usecttyhack=cttyhack
-	$usecttyhack sulogin $CONSOLE	
+	$sulogincmd $CONSOLE	
 }
 fi
 
@@ -60,8 +64,11 @@ fi
 
 if [ -z "$(cd /var/service && ls -A)" ] || is_read_only_directory /var/service; then
 	echo "FATAL: No runnable runit startup scripts.  Dropping to single user shell."
-	[ -x "$(which cttyhack)" ] && usecttyhack=cttyhack
-	$usecttyhack sulogin $CONSOLE	
+	$sulogincmd $CONSOLE	
+fi
+
+if ( [ "$SULOGIN" = "yes" ] || grep -q 'sulogin' /proc/cmdline ) && ! grep -q 'sulogin=false' /proc/cmdline; then
+	$sulogincmd -t ${SULOGIN_TIMEOUT:-30} $CONSOLE
 fi
 
 # Execute runsvdir until halt or reboot

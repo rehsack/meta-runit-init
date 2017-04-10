@@ -4,12 +4,8 @@ PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 
 . /etc/default/rcS
 
-[ -z "$SUSHELL" ] && SUSHELL=/sbin/sushell
+[ -x /sbin/sushell ] &&  [ -z "$SUSHELL" ] && SUSHELL=/bin/sh
 export SUSHELL
-
-[ -z "$CONSOLE" ] && CONSOLE=/dev/console
-
-exec <$CONSOLE >$CONSOLE 2>$CONSOLE
 
 shiftok=1
 sulogin_time=${SULOGIN_TIMEOUT}
@@ -21,6 +17,7 @@ while [ $shiftok -eq 1 ]; do
 			sulogin_time="$1"
 			break
 		else
+			[ -n "$p" ] && CONSOLE="$p"
 			shiftok=0
 			break
 		fi
@@ -28,17 +25,21 @@ while [ $shiftok -eq 1 ]; do
 	shift 2>/dev/null || shiftok=0
 done
 
+[ -z "$CONSOLE" ] && CONSOLE=/dev/console
+
 curtime=0
 
-keypress=""
+keypress="l"
 gotkey=0
 
 readkey() {
-	echo ""
-	echo "Press one of the following keys followed by [ENTER]"
-	echo "e - within $((sulogin_time - $curtime)) seconds for emergency root login"
-	echo "q - to continue bootinging imediately"
-	echo -n "[eq]: "
+	if [ -n "$keypress" ]; then
+	    echo ""
+	    echo "Press one of the following keys followed by [ENTER]"
+	    echo "e - within $((sulogin_time - $curtime)) seconds for emergency root login"
+	    echo "q - to continue booting imediately"
+	    echo -n "[eq]: "
+         fi
 	read -t 1 keypress
 }
 
