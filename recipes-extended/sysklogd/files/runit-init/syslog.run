@@ -4,5 +4,8 @@
 
 prereqok 1-populate-volatile || exit 1
 
+logread >>/var/log/messages
+sv d 5-initial-syslog
+
 markcompleted
 exec /sbin/syslogd -n

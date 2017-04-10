@@ -75,9 +75,13 @@ if [ "$(basename "${0}")" = "run" ]; then
 		markcompleted
 		exec /sbin/klogd -n ${CONSOLELEVEL:+-c $CONSOLELEVEL}
 		;;
-	5-*syslog)
+	5-syslog)
 		markcompleted
 		exec /sbin/syslogd -n $SYSLOG_ARGS
+		;;
+	5-initial-syslog)
+		markcompleted
+		exec /bin/busybox syslogd -n $SYSLOG_ARGS
 		;;
 	esac	
 fi

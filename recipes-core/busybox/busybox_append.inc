@@ -22,10 +22,10 @@ SRC_URI_append = " \
 	file://runit-init/telinit \
 	${@['','file://runit.cfg'][(d.getVar('VIRTUAL-RUNTIME_runit', True) == 'busybox')]} \
 	${@['','file://runit.cfg'][(d.getVar('VIRTUAL-RUNTIME_init_manager', True) == 'busybox-runit-init')]} \
-	${@['','file://syslogd.cfg'][(d.getVar('VIRTUAL-RUNTIME_syslog', True) == 'busybox-syslog')]} \
+	${@['','file://syslogd.cfg'][(d.getVar('PACKAGES', True) == 'busybox-syslog')]} \
 	"
 
-RDEPENDS_busybox-runit-init =+ "${VIRTUAL-RUNTIME_syslog} initscripts"
+RDEPENDS_busybox-runit-init =+ "busybox-syslog initscripts"
 RRECOMMENDS_busybox-runit-init =+ "kernel-module-overlay"
 
 PACKAGES =+ "${@['','busybox-runit-init'][(d.getVar('VIRTUAL-RUNTIME_init_manager', True) == 'busybox-runit-init')]}"
@@ -53,7 +53,6 @@ RUNIT_SERVICES=\
 	${@bb.utils.contains('VIRTUAL-RUNTIME_dev_manager', 'busybox-mdev', 'mdev.once.log', '', d)} \
 	${@bb.utils.contains('PACKAGES', '${PN}-ntpd', 'ntpd.log', '', d)} \
 	rclocal.once \
-	${@bb.utils.contains('PACKAGES', '${PN}-syslog', 'syslog', '', d)} \
 	${@bb.utils.contains('PACKAGES', '${PN}-syslog', 'initial-syslog', '', d)} \
 	"
 
@@ -105,6 +104,12 @@ do_install_append() {
 		# Common log service for services that need it.
 		install -d ${D}${sysconfdir}/sv
 		install -m 0755 ${WORKDIR}/runit-init/runsvlog.run ${D}${sysconfdir}/sv/service
+
+		if ${@bb.utils.contains('PACKAGES', 'busybox-syslog', 'true', 'false', d)}; then
+			install -m 0755 ${WORKDIR}/runit-init/syslog.run ${D}${sysconfdir}/sv/service/syslog.run.${BPN}
+			install -d ${D}${sysconfdir}/service/5-syslog
+			ln -sf ${sysconfdir}/sv/service/syslog.run ${D}${sysconfdir}/service/5-syslog/run
+		fi
 
 		# Make sure timestamp exists
 		touch ${D}${sysconfdir}/timestamp
