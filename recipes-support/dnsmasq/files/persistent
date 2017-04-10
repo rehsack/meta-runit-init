@@ -1,4 +1,0 @@
-l root root 0644 /etc/dnsmasq.conf /var/persistent/etc/dnsmasq.conf
-f root root 0644 /etc/dnsmasq.conf none
-l root root 0755 /etc/dnsmasq.d /var/persistent/etc/dnsmasq.d
-d root root 0755 /etc/dnsmasq.d none

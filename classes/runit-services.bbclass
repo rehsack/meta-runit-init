@@ -25,5 +25,11 @@ do_install_append() {
        	                	ln -sf ${sysconfdir}/sv/service/runsvlog.run ${D}${sysconfdir}/service/${once:+1-}${servicename}/log/run
 			fi
 		done
+		if ${@bb.utils.contains('DISTRO_FEATURES', 'read-only-rootfs', 'false', 'true', d)}; then
+			for sv in $(ls -A ${D}${sysconfdir}/service); do
+				mkdir -p ${D}${localstatedir}/service/$sv
+				ln -sf ${sysconfdir}/service/$sv/run ${D}${localstatedir}/service/$sv/
+			done
+		fi
 	fi
 }

@@ -36,7 +36,7 @@ create_file() {
 		[ "${VERBOSE}" != "no" ] && echo "Target already exists. Skipping."
 	} || {
 		if [ -z "$ROOT_DIR" ]; then
-			eval $EXEC &
+			eval $EXEC
 		else
 			# Creating some files at rootfs time may fail and should fail,
 			# but these failures should not be logged to make sure the do_rootfs
@@ -68,68 +68,30 @@ mk_dir() {
 }
 
 link_file() {
-	# If done right on target device the actual file should be on volatile
-        # or persistent storage # instead of read-only (in the case of
-        # read-only-rootfs)
 	EXEC="
-	if [ -n \"${ROOT_DIR}\" ] && [ \"\$ROOTFS_READ_ONLY\" = \"yes\" ]; then
-		mkdir -p \"${ROOT_DIR}\$TDIR\";
-		if [ -d \"$2\" ]; then
-			TDIR=\"\$(echo \"$2\"|sed -e 's@${ROOT_DIR}@@')\";
-			mkdir -p \"${ROOT_DIR}/etc/volatiles.orig/\$TDIR\";
-			cp -a \"$2\"/* \"${ROOT_DIR}/etc/volatiles.orig/\$TDIR/\";
-			cp -a \"$2\"/.[!.]* \"${ROOT_DIR}/etc/volatiles.orig/\$TDIR/\";
+	if [ -L \"$2\" ]; then
+		[ \"\$(readlink -f \"$2\")\" != \"$1\" ] && { rm -f \"$2\"; ln -sf \"$1\" \"$2\"; };
+	elif [ -d \"$2\" ]; then
+		if awk '\$2 == \"$2\" {exit 1}' /proc/mounts; then
+			cp -a $2/* $1 2>/dev/null;
+			cp -a $2/.[!.]* $1 2>/dev/null;
 			rm -rf \"$2\";
-		elif [ ! -L \"$2\" ]; then
-			TDIR=\"\$(dirname \"\$(echo \"$2\"|sed -e 's@${ROOT_DIR}@@')\")\";
-			TFILE=\"\$(echo \"$2\"|sed -e 's@${ROOT_DIR}@@')\";
-			mkdir -p \"${ROOT_DIR}/etc/volatiles.orig/\$TDIR\" ;
-			cp -a \"$2\" \"${ROOT_DIR}/etc/volatiles.orig/\$TFILE\";
-			rm -f \"$2\";
-		else
-			TDIR=\"\$(dirname \"\$(echo \"$2\"|sed -e 's@${ROOT_DIR}@@')\")\";
-			TFILE=\"\$(echo \"$2\"|sed -e 's@${ROOT_DIR}@@')\";
-			mkdir -p \"${ROOT_DIR}/etc/volatiles.orig/\$TDIR\" ;
-			rm -f \"${ROOT_DIR}/etc/volatiles.orig/\$TFILE\";
-			cp -a \"$2\" \"${ROOT_DIR}/etc/volatiles.orig/\$TFILE\";
-			rm -f \"$2\";
-		fi;
-		ln -sf \"$1\" \"$2\";
+			ln -sf \"$1\" \"$2\";
+		fi
 	else
-		if [ -d \"$1\" ]; then
-			if [ -d \"/etc/volatiles.orig/$2\" ]; then
-				cp -a \"/etc/volatiles.orig/$2\"/* \"$1/\" 2>/dev/null;
-				cp -a \"/etc/volatiles.orig/$2\"/.[!.]* \"$1/\" 2>/dev/null;
-			fi;
-		elif [ -e \"/etc/volatiles.orig/$2\" ]; then
-			if [ ! -L \"$1\" ]; then
-				cp -a \"/etc/volatiles.orig/$2\" \"$1\";
-			else
-				rm -f \"$1\";
-				cp -a \"/etc/volatiles.orig/$2\" \"$1\";
-			fi;
-		fi;
-
-		if [ \"\$ROOTFS_READ_ONLY\" != \"yes\" ]; then
-			if [ -L \"$2\" ]; then
-				[ \"\$(readlink -f \"$2\")\" != \"\$(readlink -f \"$1\")\" ] && { rm -f \"$2\"; ln -sf \"$1\" \"$2\"; };
-			elif [ -d \"$2\" ]; then
-				if awk '\$2 == \"$2\" {exit 1}' /proc/mounts; then
-					cp -a $2/* $1 2>/dev/null;
-					cp -a $2/.[!.]* $1 2>/dev/null;
-					rm -rf \"$2\";
-					ln -sf \"$1\" \"$2\";
-				fi;
-			else
-				ln -sf \"$1\" \"$2\";
-			fi;
-		fi;
+		ln -sf \"$1\" \"$2\";
 	fi
         "
 
 	test "$VOLATILE_ENABLE_CACHE" = yes && echo "	$EXEC" >> /etc/volatile.cache.build
 
-	eval $EXEC &
+	if [ -z "$ROOT_DIR" ]; then
+		eval $EXEC
+	else
+		# For the same reason with create_file(), failures should
+		# not be logged.
+		eval $EXEC > /dev/null 2>&1
+	fi
 }
 
 check_requirements() {
@@ -188,9 +150,9 @@ apply_cfgfile() {
 		return 1
 	}
 
-	cat ${CFGFILE} | grep -v "^#" | \
-		while read LINE; do
-		eval `echo "$LINE" | sed -n "s/\(.*\)\ \(.*\) \(.*\)\ \(.*\)\ \(.*\)\ \(.*\)/TTYPE=\1 ; TUSER=\2; TGROUP=\3; TMODE=\4; TNAME=\5 TLTARGET=\6/p"`
+	cat ${CFGFILE} | sed 's/#.*//' | \
+	while read TTYPE TUSER TGROUP TMODE TNAME TLTARGET; do
+		test -z "${TLTARGET}" && continue
 		TNAME=${ROOT_DIR}${TNAME}
 		[ "${VERBOSE}" != "no" ] && echo "Checking for -${TNAME}-."
 
@@ -225,7 +187,7 @@ apply_cfgfile() {
 
 		case "${TTYPE}" in
 			"f")  [ "${VERBOSE}" != "no" ] && echo "Creating file -${TNAME}-."
-				create_file "${TNAME}" &
+				create_file "${TNAME}"
 				;;
 			"d")  [ "${VERBOSE}" != "no" ] && echo "Creating directory -${TNAME}-."
 				mk_dir "${TNAME}"
@@ -257,7 +219,6 @@ then
 	sh ${ROOT_DIR}/etc/volatile.cache
 else
 	rm -f ${ROOT_DIR}/etc/volatile.cache ${ROOT_DIR}/etc/volatile.cache.build
-	mkdir -p ${ROOT_DIR}/etc/volatiles.orig
 	for file in `ls -1 "${CFGDIR}" | sort`; do
 		apply_cfgfile "${CFGDIR}/${file}"
 	done

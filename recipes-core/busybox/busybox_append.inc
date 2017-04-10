@@ -15,7 +15,6 @@ SRC_URI_append = " \
 	file://runit-init/initsig \
 	file://runit-init/mdev.run \
 	file://runit-init/ntpd.run \
-	file://runit-init/persistent \
 	file://runit-init/rc.local.sample \
 	file://runit-init/rclocal.run \
 	file://runit-init/rcS-default \
@@ -33,6 +32,7 @@ SRC_URI_append = " \
 	"
 
 RRECOMMENDS_${PN}-runit-init += "${PN}-mdev ${PN}-syslog"
+RRECOMMENDS_busybox-runit-init =+ "kernel-module-overlay"
 
 PACKAGES =+ "${@['','busybox-runit-init'][(d.getVar('VIRTUAL-RUNTIME_init_manager', True) == 'busybox-runit-init')]}"
 
@@ -83,7 +83,6 @@ do_install_append() {
 		install -d ${D}${base_sbindir}
 		install -d ${D}${sysconfdir}
 		install -d ${D}${sysconfdir}/default
-		install -d ${D}${sysconfdir}/default/persistent
 		install -d ${D}${libexecdir}/getty-tty
 		# Holds state information pertaining to urandom
 		install -d ${D}${localstatedir}/lib/urandom
@@ -125,11 +124,16 @@ do_install_append() {
 		install -d ${D}${sysconfdir}/sv
 		install -m 0755 ${WORKDIR}/runit-init/runsvlog.run ${D}${sysconfdir}/sv/service
 
-		install -m 0644 ${WORKDIR}/runit-init/persistent ${D}${sysconfdir}/default/persistent/15_busybox
 		install -m 0644 ${WORKDIR}/runit-init/logrotate-dmesg.conf ${D}${sysconfdir}/
 
 		# Make sure timestamp exists
 		touch ${D}${sysconfdir}/timestamp
+		if ${@bb.utils.contains('DISTRO_FEATURES', 'read-only-rootfs', 'false', 'true', d)}; then
+			for sv in $(ls -A ${D}${sysconfdir}/service); do
+				mkdir -p ${D}${localstatedir}/service/$sv
+				ln -sf ${sysconfdir}/service/$sv/run ${D}${localstatedir}/service/$sv/
+			done
+		fi
 	fi
 }
 
