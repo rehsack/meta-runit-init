@@ -28,7 +28,7 @@ RRECOMMENDS_busybox-runit-init =+ "kernel-module-overlay"
 
 PACKAGES =+ "${@['','busybox-runit-init'][(d.getVar('VIRTUAL-RUNTIME_init_manager', True) == 'busybox-runit-init')]}"
 
-FILES_${PN}-runit-init = "${base_sbindir}/init ${base_sbindir}/init.${PN} ${base_sbindir}/telinit ${base_sbindir}/telinit.${PN} ${base_sbindir}/initsig ${sysconfdir}/rc.local ${sysconfdir}/default ${sysconfdir}/sv ${libexecdir}/getty-tty ${sysconfdir}/default/persistent ${sysconfdir}/logrotate-dmesg.conf ${base_sbindir}/runlevel ${localstatedir}/lib/urandom ${sysconfdir}/etc/init.d/system-stop.sh ${base_sbindir}/sulogin.sh ${base_sbindir}/sushell"
+FILES_${PN}-runit-init = "${base_sbindir}/init ${base_sbindir}/init.${BPN} ${base_sbindir}/telinit ${base_sbindir}/telinit.${BPN} ${base_sbindir}/initsig ${sysconfdir}/rc.local ${sysconfdir}/default ${sysconfdir}/sv ${libexecdir}/getty-tty ${base_sbindir}/runlevel ${localstatedir}/lib/urandom ${sysconfdir}/etc/init.d/system-stop.sh ${base_sbindir}/sulogin.sh"
 
 inherit update-alternatives runit-services
 
@@ -44,11 +44,7 @@ ALTERNATIVE_PRIORITY[halt] = "15"
 ALTERNATIVE_LINK_NAME[reboot] = "${base_sbindir}/reboot"
 ALTERNATIVE_PRIORITY[reboot] = "15"
 
-ALTERNATIVE_${PN}_append += "sulogin"
-ALTERNATIVE_PRIORITY[init] = "70"
-ALTERNATIVE_PRIORITY[telinit] = "70"
-
-CONFFILES_${PN}-runit-init = "${sysconfdir}/default/persistent/20_runit_init ${sysconfdir}/default/rcS ${sysconfdir}/default/devpts ${sysconfdir}/logrotate-dmesg.conf"
+CONFFILES_${PN}-runit-init = "${sysconfdir}/default/rcS"
 
 RUNIT_SERVICES=\
 	" \
